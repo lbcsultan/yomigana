@@ -39,6 +39,15 @@ export default function SentenceReader({ content }: SentenceReaderProps) {
           {content.full_translation}
         </p>
       </div>
+
+      <div className="mt-4 rounded-lg bg-slate-50 p-4">
+        <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+          한글 발음
+        </p>
+        <p className="mt-1 text-base text-[#1E2761]">
+          {content.tokens.map((token) => token.reading).join(" ")}
+        </p>
+      </div>
     </div>
   );
 }
