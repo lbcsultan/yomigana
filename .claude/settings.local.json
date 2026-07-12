@@ -3,7 +3,9 @@
     "allow": [
       "Bash(pandoc -t markdown \"D:/2026-2/일본어학습/일본어학습플랫폼_사업타당성분석_개발계획서.docx\")",
       "PowerShell(Get-Command pandoc -ErrorAction SilentlyContinue)",
-      "PowerShell(Get-Command soffice -ErrorAction SilentlyContinue)"
+      "PowerShell(Get-Command soffice -ErrorAction SilentlyContinue)",
+      "PowerShell(Get-CimInstance Win32_Process -Filter \"ProcessId=6936\")",
+      "Bash(npx tsc *)"
     ]
   }
 }
