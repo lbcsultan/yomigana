@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Content } from "@/lib/types";
 import { normalizeReading, normalizeRomaji, getTokenRomaji } from "@/lib/text";
 import TokenSurface from "./TokenSurface";
@@ -27,6 +27,19 @@ export default function DictationMode({ content }: DictationModeProps) {
   const [answers, setAnswers] = useState<Record<number, TokenAnswer>>({});
   const [grades, setGrades] = useState<Record<number, TokenGrade>>({});
   const [graded, setGraded] = useState(false);
+  const hangulRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const romajiRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+  const handleEnter = (
+    e: React.KeyboardEvent<HTMLInputElement>,
+    field: "hangul" | "romaji",
+    index: number
+  ) => {
+    if (e.key !== "Enter") return;
+    e.preventDefault();
+    const refs = field === "hangul" ? hangulRefs : romajiRefs;
+    refs.current[index + 1]?.focus();
+  };
 
   const handleChange = (
     tokenId: number,
@@ -98,8 +111,12 @@ export default function DictationMode({ content }: DictationModeProps) {
 
   return (
     <div>
+      <p className="mb-3 text-xs text-slate-400">
+        입력창에서 Enter를 누르면 같은 방식(한글/romaji)의 다음 단어 입력창으로 이동합니다.
+      </p>
+
       <div className="flex flex-wrap gap-x-1 gap-y-6 rounded-lg border border-slate-200 bg-white p-6">
-        {content.tokens.map((token) => {
+        {content.tokens.map((token, i) => {
           const answer = answers[token.token_id] ?? EMPTY_ANSWER;
           const grade = grades[token.token_id];
           return (
@@ -116,20 +133,28 @@ export default function DictationMode({ content }: DictationModeProps) {
                 <TokenSurface token={token} />
               </span>
               <input
+                ref={(el) => {
+                  hangulRefs.current[i] = el;
+                }}
                 value={answer.hangul}
                 onChange={(e) =>
                   handleChange(token.token_id, "hangul", e.target.value)
                 }
+                onKeyDown={(e) => handleEnter(e, "hangul", i)}
                 placeholder="한글 발음"
                 className={`w-24 rounded border px-1 py-0.5 text-center text-sm outline-none ${inputClass(
                   grade?.hangul
                 )}`}
               />
               <input
+                ref={(el) => {
+                  romajiRefs.current[i] = el;
+                }}
                 value={answer.romaji}
                 onChange={(e) =>
                   handleChange(token.token_id, "romaji", e.target.value)
                 }
+                onKeyDown={(e) => handleEnter(e, "romaji", i)}
                 placeholder="romaji"
                 className={`w-24 rounded border px-1 py-0.5 text-center text-sm italic outline-none ${inputClass(
                   grade?.romaji

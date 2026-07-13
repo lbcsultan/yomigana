@@ -4,7 +4,7 @@ import { contents } from "@/lib/mock-data";
 export default function Home() {
   return (
     <div className="flex flex-1 justify-center bg-slate-50">
-      <main className="w-full max-w-3xl px-6 py-16">
+      <main className="w-full max-w-6xl px-6 py-16">
         <header className="mb-10">
           <p className="text-sm font-semibold text-[#1E2761]">
             요미가나 Yomigana
@@ -18,7 +18,7 @@ export default function Home() {
           </p>
         </header>
 
-        <ul className="grid grid-cols-2 gap-3">
+        <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
           {contents.map((content) => (
             <li key={content.id}>
               <Link

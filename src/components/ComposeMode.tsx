@@ -18,20 +18,27 @@ export default function ComposeMode({ content }: ComposeModeProps) {
   const [isHangulWrong, setIsHangulWrong] = useState(false);
   const [isRomajiWrong, setIsRomajiWrong] = useState(false);
   const [isRevealed, setIsRevealed] = useState(false);
+  const [lastMethod, setLastMethod] = useState<"hangul" | "romaji">("hangul");
   const hangulInputRef = useRef<HTMLInputElement>(null);
+  const romajiInputRef = useRef<HTMLInputElement>(null);
 
   const finished = index >= content.tokens.length;
   const currentToken = finished ? null : content.tokens[index];
 
   useEffect(() => {
-    hangulInputRef.current?.focus();
-  }, [index]);
+    if (lastMethod === "romaji") {
+      romajiInputRef.current?.focus();
+    } else {
+      hangulInputRef.current?.focus();
+    }
+  }, [index, lastMethod]);
 
   const composedTokens = content.tokens.slice(0, index);
   const remainingCount = content.tokens.length - index;
   const remainingPlaceholder = Array(remainingCount).fill("▢").join(" ");
 
-  const advance = () => {
+  const advance = (method: "hangul" | "romaji") => {
+    setLastMethod(method);
     setIndex((i) => i + 1);
     setHangulValue("");
     setRomajiValue("");
@@ -46,7 +53,7 @@ export default function ComposeMode({ content }: ComposeModeProps) {
     if (!answer) return;
 
     if (answer === normalizeReading(currentToken.reading)) {
-      advance();
+      advance("hangul");
     } else {
       setIsHangulWrong(true);
     }
@@ -58,7 +65,7 @@ export default function ComposeMode({ content }: ComposeModeProps) {
     if (!answer) return;
 
     if (answer === normalizeRomaji(getTokenRomaji(currentToken))) {
-      advance();
+      advance("romaji");
     } else {
       setIsRomajiWrong(true);
     }
@@ -84,6 +91,7 @@ export default function ComposeMode({ content }: ComposeModeProps) {
   };
 
   const reset = () => {
+    setLastMethod("hangul");
     setIndex(0);
     setHangulValue("");
     setRomajiValue("");
@@ -179,6 +187,7 @@ export default function ComposeMode({ content }: ComposeModeProps) {
 
           <div className="mt-3 flex items-center gap-2">
             <input
+              ref={romajiInputRef}
               value={romajiValue}
               onChange={(e) => {
                 setRomajiValue(e.target.value);

@@ -7,7 +7,10 @@
       "PowerShell(Get-CimInstance Win32_Process -Filter \"ProcessId=6936\")",
       "Bash(npx tsc *)",
       "Bash(netstat -ano)",
-      "Bash(node -e ' *)"
+      "Bash(node -e ' *)",
+      "Read(//d/claude/chinese/**)",
+      "Bash(echo \"EXIT:$?\")",
+      "Bash(node --experimental-strip-types -e ' *)"
     ]
   }
 }

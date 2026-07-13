@@ -21,7 +21,7 @@ const SYLLABLE_TO_ROMAJI: Record<string, string> = {
   자: "za", 지: "ji", 즈: "zu", 제: "ze", 조: "zo",
   쟈: "ja", 쥬: "ju", 죠: "jo",
   타: "ta", 치: "chi", 츠: "tsu", 테: "te", 토: "to",
-  쵸: "cho", 츄: "chu",
+  챠: "cha", 쵸: "cho", 츄: "chu",
   다: "da", 데: "de", 도: "do",
   나: "na", 니: "ni", 누: "nu", 네: "ne", 노: "no",
   냐: "nya", 뉴: "nyu", 뇨: "nyo",
