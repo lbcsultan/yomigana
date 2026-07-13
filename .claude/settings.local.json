@@ -6,7 +6,8 @@
       "PowerShell(Get-Command soffice -ErrorAction SilentlyContinue)",
       "PowerShell(Get-CimInstance Win32_Process -Filter \"ProcessId=6936\")",
       "Bash(npx tsc *)",
-      "Bash(netstat -ano)"
+      "Bash(netstat -ano)",
+      "Bash(node -e ' *)"
     ]
   }
 }

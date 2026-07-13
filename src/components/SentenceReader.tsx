@@ -1,8 +1,10 @@
 "use client";
 
 import { Content } from "@/lib/types";
+import { getTokenRomaji } from "@/lib/text";
 import TokenSurface from "./TokenSurface";
 import TokenReading from "./TokenReading";
+import TokenRomaji from "./TokenRomaji";
 
 interface SentenceReaderProps {
   content: Content;
@@ -23,6 +25,9 @@ export default function SentenceReader({ content }: SentenceReaderProps) {
             </span>
             <span className="text-sm font-medium leading-tight text-[#1E2761]">
               <TokenReading token={token} />
+            </span>
+            <span className="text-xs italic leading-tight text-slate-400">
+              <TokenRomaji token={token} />
             </span>
             <span className="text-xs leading-tight text-slate-400 group-hover:text-slate-600">
               {token.definition}
@@ -46,6 +51,15 @@ export default function SentenceReader({ content }: SentenceReaderProps) {
         </p>
         <p className="mt-1 text-base text-[#1E2761]">
           {content.tokens.map((token) => token.reading).join(" ")}
+        </p>
+      </div>
+
+      <div className="mt-4 rounded-lg bg-slate-50 p-4">
+        <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+          로마자 발음
+        </p>
+        <p className="mt-1 text-base italic text-[#1E2761]">
+          {content.tokens.map((token) => getTokenRomaji(token)).join(" ")}
         </p>
       </div>
     </div>

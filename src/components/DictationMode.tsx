@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Content } from "@/lib/types";
-import { normalizeReading } from "@/lib/text";
+import { normalizeReading, normalizeRomaji, getTokenRomaji } from "@/lib/text";
 import TokenSurface from "./TokenSurface";
 
 interface DictationModeProps {
@@ -11,27 +11,55 @@ interface DictationModeProps {
 
 type Grade = "unanswered" | "correct" | "incorrect";
 
+interface TokenAnswer {
+  hangul: string;
+  romaji: string;
+}
+
+interface TokenGrade {
+  hangul: Grade;
+  romaji: Grade;
+}
+
+const EMPTY_ANSWER: TokenAnswer = { hangul: "", romaji: "" };
+
 export default function DictationMode({ content }: DictationModeProps) {
-  const [answers, setAnswers] = useState<Record<number, string>>({});
-  const [grades, setGrades] = useState<Record<number, Grade>>({});
+  const [answers, setAnswers] = useState<Record<number, TokenAnswer>>({});
+  const [grades, setGrades] = useState<Record<number, TokenGrade>>({});
   const [graded, setGraded] = useState(false);
 
-  const handleChange = (tokenId: number, value: string) => {
-    setAnswers((prev) => ({ ...prev, [tokenId]: value }));
+  const handleChange = (
+    tokenId: number,
+    field: "hangul" | "romaji",
+    value: string
+  ) => {
+    setAnswers((prev) => ({
+      ...prev,
+      [tokenId]: { ...(prev[tokenId] ?? EMPTY_ANSWER), [field]: value },
+    }));
     if (graded) setGraded(false);
   };
 
   const gradeAll = () => {
-    const nextGrades: Record<number, Grade> = {};
+    const nextGrades: Record<number, TokenGrade> = {};
     for (const token of content.tokens) {
-      const answer = normalizeReading(answers[token.token_id] ?? "");
-      if (!answer) {
-        nextGrades[token.token_id] = "unanswered";
-      } else if (answer === normalizeReading(token.reading)) {
-        nextGrades[token.token_id] = "correct";
-      } else {
-        nextGrades[token.token_id] = "incorrect";
-      }
+      const answer = answers[token.token_id] ?? EMPTY_ANSWER;
+
+      const hangulAnswer = normalizeReading(answer.hangul);
+      const hangulGrade: Grade = !hangulAnswer
+        ? "unanswered"
+        : hangulAnswer === normalizeReading(token.reading)
+        ? "correct"
+        : "incorrect";
+
+      const romajiAnswer = normalizeRomaji(answer.romaji);
+      const romajiGrade: Grade = !romajiAnswer
+        ? "unanswered"
+        : romajiAnswer === normalizeRomaji(getTokenRomaji(token))
+        ? "correct"
+        : "incorrect";
+
+      nextGrades[token.token_id] = { hangul: hangulGrade, romaji: romajiGrade };
     }
     setGrades(nextGrades);
     setGraded(true);
@@ -43,11 +71,15 @@ export default function DictationMode({ content }: DictationModeProps) {
     setGraded(false);
   };
 
-  const correctCount = Object.values(grades).filter((g) => g === "correct").length;
+  const correctCount = Object.values(grades).reduce(
+    (sum, g) =>
+      sum + (g.hangul === "correct" ? 1 : 0) + (g.romaji === "correct" ? 1 : 0),
+    0
+  );
+  const totalCount = content.tokens.length * 2;
 
-  const borderClass = (tokenId: number) => {
-    if (!graded) return "border-slate-300 focus:border-[#1E2761]";
-    const grade = grades[tokenId];
+  const inputClass = (grade: Grade | undefined) => {
+    if (!graded || !grade) return "border-slate-300 focus:border-[#1E2761]";
     if (grade === "correct") return "border-emerald-500 bg-emerald-50";
     if (grade === "incorrect") return "border-red-400 bg-red-50";
     return "border-slate-300";
@@ -56,37 +88,56 @@ export default function DictationMode({ content }: DictationModeProps) {
   const surfaceClass = (tokenId: number) => {
     if (!graded) return "text-slate-900";
     const grade = grades[tokenId];
-    if (grade === "correct") return "text-blue-600";
-    if (grade === "incorrect") return "text-red-600";
+    if (!grade) return "text-slate-900";
+    if (grade.hangul === "correct" && grade.romaji === "correct")
+      return "text-blue-600";
+    if (grade.hangul === "incorrect" || grade.romaji === "incorrect")
+      return "text-red-600";
     return "text-slate-900";
   };
 
   return (
     <div>
       <div className="flex flex-wrap gap-x-1 gap-y-6 rounded-lg border border-slate-200 bg-white p-6">
-        {content.tokens.map((token) => (
-          <div
-            key={token.token_id}
-            className="flex flex-col items-center gap-1 px-2 py-1 text-center"
-          >
-            <span
-              title={token.reading}
-              className={`text-2xl leading-tight transition-colors cursor-help ${surfaceClass(
-                token.token_id
-              )}`}
+        {content.tokens.map((token) => {
+          const answer = answers[token.token_id] ?? EMPTY_ANSWER;
+          const grade = grades[token.token_id];
+          return (
+            <div
+              key={token.token_id}
+              className="flex flex-col items-center gap-1 px-2 py-1 text-center"
             >
-              <TokenSurface token={token} />
-            </span>
-            <input
-              value={answers[token.token_id] ?? ""}
-              onChange={(e) => handleChange(token.token_id, e.target.value)}
-              placeholder="발음 입력"
-              className={`w-24 rounded border px-1 py-0.5 text-center text-sm outline-none ${borderClass(
-                token.token_id
-              )}`}
-            />
-          </div>
-        ))}
+              <span
+                title={`${token.reading} / ${getTokenRomaji(token)}`}
+                className={`text-2xl leading-tight transition-colors cursor-help ${surfaceClass(
+                  token.token_id
+                )}`}
+              >
+                <TokenSurface token={token} />
+              </span>
+              <input
+                value={answer.hangul}
+                onChange={(e) =>
+                  handleChange(token.token_id, "hangul", e.target.value)
+                }
+                placeholder="한글 발음"
+                className={`w-24 rounded border px-1 py-0.5 text-center text-sm outline-none ${inputClass(
+                  grade?.hangul
+                )}`}
+              />
+              <input
+                value={answer.romaji}
+                onChange={(e) =>
+                  handleChange(token.token_id, "romaji", e.target.value)
+                }
+                placeholder="romaji"
+                className={`w-24 rounded border px-1 py-0.5 text-center text-sm italic outline-none ${inputClass(
+                  grade?.romaji
+                )}`}
+              />
+            </div>
+          );
+        })}
       </div>
 
       <div className="mt-4 flex items-center gap-3">
@@ -106,7 +157,7 @@ export default function DictationMode({ content }: DictationModeProps) {
         </button>
         {graded && (
           <span className="text-sm font-medium text-slate-600">
-            {correctCount} / {content.tokens.length} 정답
+            {correctCount} / {totalCount} 정답
           </span>
         )}
       </div>
